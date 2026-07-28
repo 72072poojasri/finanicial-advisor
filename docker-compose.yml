@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:15-alpine
+    container_name: financial_db
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: financial_advisor_db
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d financial_advisor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+
+    build: .
+
+    container_name: financial_api
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    env_file:
+      - .env.docker
+
+    ports:
+      - "8000:8000"
+
+    restart: always
+
+volumes:
+
+  postgres_data:
